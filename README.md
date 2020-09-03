@@ -1,7 +1,16 @@
 [![License CC BY-NC-SA 4.0](https://img.shields.io/badge/license-CC4.0-blue.svg)](https://raw.githubusercontent.com/nvlabs/SPADE/master/LICENSE.md)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
+# GauGAN (SPADE) to ONNX
+
+This repo converts pretrained GauGAN (implementation: https://github.com/nvlabs/spade/) from pytorch to ONNX format.
+
+Conversion method can be found in gaugan_to_onnx notebook.
+
+ONNX model [download](https://drive.google.com/uc?export=download&id=1suEcsJrEO6-L7wp-3SgVws7bNDheNW61)
+
 # Semantic Image Synthesis with SPADE
+
 ![GauGAN demo](https://nvlabs.github.io/SPADE//images/ocean.gif)
 
 ### [Project page](https://nvlabs.github.io/SPADE/) |   [Paper](https://arxiv.org/abs/1903.07291) | [Online Interactive Demo of GauGAN](https://www.nvidia.com/en-us/research/ai-playground/) | [GTC 2019 demo](https://youtu.be/p5U4NgVGAwg) | [Youtube Demo of GauGAN](https://youtu.be/MXWm6w4E5q0)
