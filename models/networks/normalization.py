@@ -99,6 +99,15 @@ class SPADE(nn.Module):
         normalized = self.param_free_norm(x)
 
         # Part 2. produce scaling and bias conditioned on semantic map
+        # size = x.size()[2]
+        # if type(size) is not int:
+        #     size = size.item()
+        # orig_size = segmap.size()[2]
+        # if type(orig_size) is not int:
+        #     orig_size = orig_size.item()
+        # scale = size / orig_size
+
+
         segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')
         actv = self.mlp_shared(segmap)
         gamma = self.mlp_gamma(actv)

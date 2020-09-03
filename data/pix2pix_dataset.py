@@ -7,6 +7,7 @@ from data.base_dataset import BaseDataset, get_params, get_transform
 from PIL import Image
 import util.util as util
 import os
+import numpy as np
 
 
 class Pix2pixDataset(BaseDataset):
@@ -61,6 +62,7 @@ class Pix2pixDataset(BaseDataset):
         params = get_params(self.opt, label.size)
         transform_label = get_transform(self.opt, params, method=Image.NEAREST, normalize=False)
         label_tensor = transform_label(label) * 255.0
+        print('dataset opt: ', self.opt)
         label_tensor[label_tensor == 255] = self.opt.label_nc  # 'unknown' is opt.label_nc
 
         # input image (real images)

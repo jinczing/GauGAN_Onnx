@@ -17,6 +17,7 @@ class Pix2PixModel(torch.nn.Module):
     def __init__(self, opt):
         super().__init__()
         self.opt = opt
+        print(self.opt)
         self.FloatTensor = torch.cuda.FloatTensor if self.use_gpu() \
             else torch.FloatTensor
         self.ByteTensor = torch.cuda.ByteTensor if self.use_gpu() \
@@ -40,6 +41,7 @@ class Pix2PixModel(torch.nn.Module):
     # routines based on |mode|.
     def forward(self, data, mode):
         input_semantics, real_image = self.preprocess_input(data)
+        print('pre generate fake: ', input_semantics.shape)
 
         if mode == 'generator':
             g_loss, generated = self.compute_generator_loss(
@@ -119,7 +121,9 @@ class Pix2PixModel(torch.nn.Module):
         nc = self.opt.label_nc + 1 if self.opt.contain_dontcare_label \
             else self.opt.label_nc
         input_label = self.FloatTensor(bs, nc, h, w).zero_()
+        print('input label: ', input_label.shape)
         input_semantics = input_label.scatter_(1, label_map, 1.0)
+        print('input semantics: ', input_semantics.shape)
 
         # concatenate instance map if it exists
         if not self.opt.no_instance:
@@ -191,7 +195,7 @@ class Pix2PixModel(torch.nn.Module):
             z, mu, logvar = self.encode_z(real_image)
             if compute_kld_loss:
                 KLD_loss = self.KLDLoss(mu, logvar) * self.opt.lambda_kld
-
+        print("input shape: ", input_semantics.shape)
         fake_image = self.netG(input_semantics, z=z)
 
         assert (not compute_kld_loss) or self.opt.use_vae, \
@@ -236,10 +240,10 @@ class Pix2PixModel(torch.nn.Module):
 
     def get_edges(self, t):
         edge = self.ByteTensor(t.size()).zero_()
-        edge[:, :, :, 1:] = edge[:, :, :, 1:] | (t[:, :, :, 1:] != t[:, :, :, :-1])
-        edge[:, :, :, :-1] = edge[:, :, :, :-1] | (t[:, :, :, 1:] != t[:, :, :, :-1])
-        edge[:, :, 1:, :] = edge[:, :, 1:, :] | (t[:, :, 1:, :] != t[:, :, :-1, :])
-        edge[:, :, :-1, :] = edge[:, :, :-1, :] | (t[:, :, 1:, :] != t[:, :, :-1, :])
+        edge[:, :, :, 1:] = edge[:, :, :, 1:] | (t[:, :, :, 1:] != t[:, :, :, :-1]).byte()
+        edge[:, :, :, :-1] = edge[:, :, :, :-1] | (t[:, :, :, 1:] != t[:, :, :, :-1]).byte()
+        edge[:, :, 1:, :] = edge[:, :, 1:, :] | (t[:, :, 1:, :] != t[:, :, :-1, :]).byte()
+        edge[:, :, :-1, :] = edge[:, :, :-1, :] | (t[:, :, 1:, :] != t[:, :, :-1, :]).byte()
         return edge.float()
 
     def reparameterize(self, mu, logvar):

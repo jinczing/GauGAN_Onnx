@@ -5,3 +5,8 @@ results/
 *.zip
 *.pkl
 *.pyc
+*.onnx
+/cityscapes/
+/.ipynb_checkpoints/
+
+lab.py
