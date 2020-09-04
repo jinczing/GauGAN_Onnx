@@ -64,7 +64,7 @@ def get_nonspade_norm_layer(opt, norm_type='instance'):
 # |norm_nc|: the #channels of the normalized activations, hence the output dim of SPADE
 # |label_nc|: the #channels of the input semantic map, hence the input dim of SPADE
 class SPADE(nn.Module):
-    def __init__(self, config_text, norm_nc, label_nc):
+    def __init__(self, config_text, norm_nc, label_nc, size):
         super().__init__()
 
         assert config_text.startswith('spade')
@@ -93,6 +93,8 @@ class SPADE(nn.Module):
         self.mlp_gamma = nn.Conv2d(nhidden, norm_nc, kernel_size=ks, padding=pw)
         self.mlp_beta = nn.Conv2d(nhidden, norm_nc, kernel_size=ks, padding=pw)
 
+        self.interpolate = nn.Upsample(size=size)
+
     def forward(self, x, segmap):
 
         # Part 1. generate parameter-free normalized activations
@@ -108,7 +110,11 @@ class SPADE(nn.Module):
         # scale = size / orig_size
 
 
-        segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')
+        # segmap = F.interpolate(segmap, size=x.size()[2:], mode='nearest')
+        # segmap = nn.Upsample(size=x.size()[2:])(segmap)
+        # segmap = F.upsample(segmap, scale_factor=size)
+        segmap = self.interpolate(segmap)
+        
         actv = self.mlp_shared(segmap)
         gamma = self.mlp_gamma(actv)
         beta = self.mlp_beta(actv)

@@ -68,7 +68,7 @@ class SPADEResnetBlock(nn.Module):
         return F.leaky_relu(x, 2e-1)
 
 class SPADEResnetBlockOnnx(nn.Module):
-    def __init__(self, fin, fout, opt):
+    def __init__(self, fin, fout, opt, size):
         super().__init__()
         # Attributes
         self.learned_shortcut = (fin != fout)
@@ -90,10 +90,10 @@ class SPADEResnetBlockOnnx(nn.Module):
 
         # define normalization layers
         spade_config_str = opt.norm_G.replace('spectral', '')
-        self.norm_0 = SPADE(spade_config_str, fin, opt.semantic_nc)
-        self.norm_1 = SPADE(spade_config_str, fmiddle, opt.semantic_nc)
+        self.norm_0 = SPADE(spade_config_str, fin, opt.semantic_nc, size)
+        self.norm_1 = SPADE(spade_config_str, fmiddle, opt.semantic_nc, size)
         if self.learned_shortcut:
-            self.norm_s = SPADE(spade_config_str, fin, opt.semantic_nc)
+            self.norm_s = SPADE(spade_config_str, fin, opt.semantic_nc, size)
 
         if self.learned_shortcut:
             self.shortcut = self.learned_shortcut_func

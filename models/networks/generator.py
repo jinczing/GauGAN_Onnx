@@ -143,15 +143,15 @@ class SPADEGeneratorOnnx(BaseNetwork):
             # downsampled segmentation map instead of random z
             self.fc = nn.Conv2d(self.opt.semantic_nc, 16 * nf, 3, padding=1)
 
-        self.head_0 = SPADEResnetBlockOnnx(16 * nf, 16 * nf, opt)
+        self.head_0 = SPADEResnetBlockOnnx(16 * nf, 16 * nf, opt, (4, 8))
 
-        self.G_middle_0 = SPADEResnetBlockOnnx(16 * nf, 16 * nf, opt)
-        self.G_middle_1 = SPADEResnetBlockOnnx(16 * nf, 16 * nf, opt)
+        self.G_middle_0 = SPADEResnetBlockOnnx(16 * nf, 16 * nf, opt, (8, 16))
+        self.G_middle_1 = SPADEResnetBlockOnnx(16 * nf, 16 * nf, opt, (16, 32))
 
-        self.up_0 = SPADEResnetBlockOnnx(16 * nf, 8 * nf, opt)
-        self.up_1 = SPADEResnetBlockOnnx(8 * nf, 4 * nf, opt)
-        self.up_2 = SPADEResnetBlockOnnx(4 * nf, 2 * nf, opt)
-        self.up_3 = SPADEResnetBlockOnnx(2 * nf, 1 * nf, opt)
+        self.up_0 = SPADEResnetBlockOnnx(16 * nf, 8 * nf, opt,(32, 64))
+        self.up_1 = SPADEResnetBlockOnnx(8 * nf, 4 * nf, opt,(64, 128))
+        self.up_2 = SPADEResnetBlockOnnx(4 * nf, 2 * nf, opt, (128, 256))
+        self.up_3 = SPADEResnetBlockOnnx(2 * nf, 1 * nf, opt, (256, 512))
 
         final_nc = nf
 
@@ -182,23 +182,29 @@ class SPADEGeneratorOnnx(BaseNetwork):
     def forward(self, input, z=torch.tensor(0)):
         seg = input
 
-        x = self.fc(z)
+        x = self.fc(z) # 1024*4*8
 
-        x = self.head_0(x, seg)
-        x = self.up(x)
-        x = self.G_middle_0(x, seg)
+        x = self.head_0(x, seg) # 1024*4*8
+        # x = self.up(x) # 1024*8*16
+        x = nn.Upsample(size=(8, 16))(x)
+        x = self.G_middle_0(x, seg) # 1024*8*16
 
-        x = self.up(x)
+        #x = self.up(x) # 1024*16*32
+        x = nn.Upsample(size=(16, 32))(x)
 
         x = self.G_middle_1(x, seg)
 
-        x = self.up(x)
+        #x = self.up(x) # 32*64
+        x = nn.Upsample(size=(32, 64))(x)
         x = self.up_0(x, seg)
-        x = self.up(x)
+        #x = self.up(x) # 64*128
+        x = nn.Upsample(size=(64, 128))(x)
         x = self.up_1(x, seg)
-        x = self.up(x)
+        #x = self.up(x) # 128*256
+        x = nn.Upsample(size=(128, 256))(x)
         x = self.up_2(x, seg)
-        x = self.up(x) # 128*356
+        #x = self.up(x) # 256*512
+        x = nn.Upsample(size=(256, 512))(x)
         x = self.up_3(x, seg)
 
         x = self.conv_img(F.leaky_relu(x, 2e-1))
